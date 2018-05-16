@@ -1,0 +1,3 @@
+INFOMIR_PLATFORM_SUBFOLDER=sti-sdk2-15.4
+CROSS=armv7-linux
+CXXFLAGS += -std=c++11

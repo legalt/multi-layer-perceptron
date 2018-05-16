@@ -1,0 +1,3 @@
+INFOMIR_PLATFORM_SUBFOLDER=hisilicon
+CROSS=arm-histbv310-linux
+CXXFLAGS += -std=c++11

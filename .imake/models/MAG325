@@ -1,0 +1,4 @@
+export INFOMIR_PLATFORM_SUBFOLDER=brcm
+export CROSS=mipsel-linux
+NEXUS_PLATFORM=97584
+CXXFLAGS += -std=c++0x
