@@ -6,14 +6,14 @@
 class Sigmoid: public ann::IActivation
 {
 	public:
-		double activate ( double x )
+		virtual double activate ( double x )
 		{
-			return (1.0 / (1.0 + exp(-x)));
+			return (1.0 / (1.0 + exp(-2 * x)));
 		}
 
-		double derivative ( double sigmFn )
+		virtual double derivative ( double sigmFn )
 		{
-			return sigmFn * (1 - sigmFn);
+			return 2 * sigmFn * (1.0 - sigmFn);
 		}
 };
 
@@ -21,14 +21,15 @@ class Sigmoid: public ann::IActivation
 int main ( int argc, char *argv[] )
 {
     try {
-        ann::Network<ann::Sigmoid> n({3,2,1}, 0.08);
+        Sigmoid sig;
+        ann::Network n({3,2,1}, 0.08, sig);
 
         std::vector<std::pair<std::vector<double>, double>> trainSet;
-        trainSet.push_back(std::make_pair(std::vector<double>{0, 0, 1}, 0));
+        trainSet.push_back(std::make_pair(std::vector<double>{0, 0, 1}, 1));
         trainSet.push_back(std::make_pair(std::vector<double>{0, 1, 0}, 0));
         trainSet.push_back(std::make_pair(std::vector<double>{0, 1, 1}, 0));
         trainSet.push_back(std::make_pair(std::vector<double>{1, 0, 0}, 1));
-        trainSet.push_back(std::make_pair(std::vector<double>{1, 0, 1}, 1));
+        trainSet.push_back(std::make_pair(std::vector<double>{1, 0, 1}, 0));
         trainSet.push_back(std::make_pair(std::vector<double>{1, 1, 0}, 1));
         trainSet.push_back(std::make_pair(std::vector<double>{1, 1, 1}, 0));
 

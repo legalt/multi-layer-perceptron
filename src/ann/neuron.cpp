@@ -50,9 +50,11 @@ namespace {
 
             virtual double getInput() { return m_input; }
 
-            virtual void addChild ( ann::INeuron * neuron ) { m_childs.push_back(neuron); }
+            virtual void addChild ( ann::INeuron * neuron ) {
+                m_childs.push_back(neuron);
+            }
 
-            virtual std::vector<ann::INeuron*> getPrevLayer () { return m_childs; }
+            virtual std::vector<ann::INeuron*> getPrevLayer() { return m_childs; };
 
             virtual void correctWeights ( double learningRate, double delta, size_t nNeuronIndex = 0 )
             {
@@ -79,14 +81,14 @@ namespace {
             void generateWeights ()
             {
                 for ( auto & weight: m_weights )
-                    weight = getRandomWeights(0.0, 1.0);
+                    weight = getRandomWeights(-0.5, 0.5);
             }
         };
 };
 
 namespace ann {
-    std::weak_ptr<INeuron> & createNeuron ( size_t layerIndex, size_t layerNeuronIndex, IActivation & activation, size_t countWeights )
+    std::shared_ptr<INeuron> createNeuron ( size_t layerIndex, size_t layerNeuronIndex, IActivation & activation, size_t countWeights )
     {
-        return std::weak_ptr<::Neuron>(layerIndex, layerNeuronIndex, activation, countWeights);
+        return std::make_shared<Neuron>(layerIndex, layerNeuronIndex, activation, countWeights);
     }
 };

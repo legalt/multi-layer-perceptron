@@ -4,12 +4,12 @@
 #include <exception>
 #include <stddef.h>
 #include <algorithm>
-#include "ann/IActivation.h"
+// #include "ann/IActivation.h"
 #include "ann/INeuron.h"
 
 namespace {
     // output - sigmoidFn(I1*W1..+..In * Wn)
-    double calculation_weights_delta ( double output, double error, IActivation fn )
+    double calculation_weights_delta ( double output, double error, ann::IActivation & fn )
     {
         // e * sigm(x)dx
         return error * fn.derivative(output);
@@ -27,14 +27,14 @@ namespace ann
         Network & operator= ( const Network & ) = delete;
         Network & operator= ( Network && ) = delete;
 
-        Network ( const std::vector<size_t> & layers, double learningRate, IActivation activation );
+        Network ( const std::vector<size_t> & layers, double learningRate, IActivation & activation );
 
         inline std::vector<std::shared_ptr<INeuron>> getNeurons () { return m_neurons; }
     private:
         std::vector<std::shared_ptr<INeuron>> m_neurons;
         std::vector<size_t> m_layers;
         double m_learningRate;
-        IActivation m_activation;
+        IActivation & m_activation;
 
         void init ( const std::vector<size_t> & layers );
     public:
