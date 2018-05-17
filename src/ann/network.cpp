@@ -77,7 +77,7 @@ namespace ann
         std::vector<double> errors;
 
         for ( size_t index = 0; index < outputs.size(); index++ )
-            errors.push_back(outputs[index] - etalons[index]);
+            errors.push_back(etalons[index] - outputs[index]);
 
         return errors;
     }

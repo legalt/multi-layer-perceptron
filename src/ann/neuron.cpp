@@ -80,8 +80,10 @@ namespace {
 
             void generateWeights ()
             {
+                srand((unsigned)time(0));
+                
                 for ( auto & weight: m_weights )
-                    weight = getRandomWeights(-0.5, 0.5);
+                    weight = -0.5 + (double)rand()/((double)RAND_MAX/(0.5 + 0.5));
             }
         };
 };
