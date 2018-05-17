@@ -3,6 +3,21 @@
 #include <iostream>
 #include <utility>
 
+class Sigmoid: public ann::IActivation
+{
+	public:
+		double activate ( double x )
+		{
+			return (1.0 / (1.0 + exp(-x)));
+		}
+
+		double derivative ( double sigmFn )
+		{
+			return sigmFn * (1 - sigmFn);
+		}
+};
+
+
 int main ( int argc, char *argv[] )
 {
     try {
