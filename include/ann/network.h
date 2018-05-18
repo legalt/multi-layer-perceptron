@@ -40,8 +40,18 @@ namespace ann
     public:
         std::vector<double> train ( std::vector<double> inputs );
 
+		std::vector<std::vector<double>> train ( std::vector<std::vector<double>> samples );
+
+		//FOR ONE TRAIN DATA - sqrt(error) / outputCount
+        double calculationMSE ( std::vector<double> inputs, std::vector<double> etalons );
+
+		//FOR SET TRAIN DATA - sqrt(error) / outputCount
+        double calculationMSE ( std::vector<std::vector<double>> samples, std::vector<std::vector<double>> etalons );
+
         std::vector<double> getErrors ( std::vector<double> outputs, std::vector<double> etalons );
 
-        std::vector<double> correctWeights ( std::vector<double> outputs, std::vector<double> etalons);
+        void correctWeights ( std::vector<double> outputs, std::vector<double> etalons);
+
+		void correctWeights ( std::vector<std::vector<double>> outputs, std::vector<std::vector<double>> etalons);
     };
 };

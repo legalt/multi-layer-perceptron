@@ -9,12 +9,13 @@ class Sigmoid: public ann::IActivation
 	public:
 		virtual double activate ( double x )
 		{
-			return (1.0 / (1.0 + exp(-x)));
+			return (2 * x / (1.0 + fabs(x)));
 		}
 
-		virtual double derivative ( double sigmFn )
+		virtual double derivative ( double x )
 		{
-			return sigmFn * (1.0 - sigmFn);
+			double temp = 1.0 + fabs(x);
+			return 2 / (temp * temp);
 		}
 };
 
@@ -38,49 +39,57 @@ int main ( int argc, char *argv[] )
 {
     try {
         Sigmoid sig;
-        ann::Network n({3,2,1}, 0.05, sig);
-        double minError = 0.0001;
+        ann::Network n({3,2,1}, 0.07, sig);        
 
-        std::vector<std::pair<std::vector<double>, double>> trainSet;
-        trainSet.push_back(std::make_pair(std::vector<double>{0, 0, 1}, 1));
-        trainSet.push_back(std::make_pair(std::vector<double>{0, 1, 0}, 0));
-        trainSet.push_back(std::make_pair(std::vector<double>{0, 1, 1}, 0));
-        trainSet.push_back(std::make_pair(std::vector<double>{1, 0, 0}, 1));
-        trainSet.push_back(std::make_pair(std::vector<double>{1, 0, 1}, 1));
-        trainSet.push_back(std::make_pair(std::vector<double>{1, 1, 0}, 1));
-        trainSet.push_back(std::make_pair(std::vector<double>{1, 1, 1}, 0));
+		std::vector<std::vector<double>> trainSet = {
+			{0, 0, 1},
+			{0, 1, 0},
+			{0, 1, 1},
+			{1, 0, 0},
+			{1, 0, 1},
+			{1, 1, 0},
+			{1, 1, 1}
+		};
 
-        size_t epochs = 50000;
+		std::vector<std::vector<double>> trainEtalons = {
+			{1},
+			{0},
+			{0},
+			{1},
+			{1},
+			{1},
+			{0}
+		};
+        
+        size_t epochs = 10000;
+		double minError = .2;
 
-        //TODO: need replace to network train (overloaded with epochs, with flag correct weights) method
+		double error = 0;
         for ( size_t index = 0; index < epochs; index++ )
         {    
-            for ( std::pair<std::vector<double>, double> set : trainSet )
-            {
-                std::vector<double> outputs_ = n.train(set.first);
-                n.correctWeights(outputs_, {set.second});
+			error = n.calculationMSE(trainSet, trainEtalons);
+			
+			if ( error <= minError )
+			{
+				std::cout <<" 1123123\n";
+				break;
+			}
 
-                if ( outputs_[0] < minError || outputs_[0] > 1 )
-                {
-                    index = epochs;
-                    break;
-                }
-            }
+			n.correctWeights(trainSet, trainEtalons);
         }
 
-        for ( std::pair<std::vector<double>, double> set : trainSet )
-        {
-            std::vector<double> outputs_ = n.train(set.first);
-            auto errors = n.getErrors(outputs_, {set.second});
-            std::cout << "Expected: " << set.second << " Errors:";
+		std::cout << "MSE Error: " << error << '\n';
 
-            for ( auto err : errors )
-                std::cout << err << " ";
+		for ( size_t sampleIndex = 0; sampleIndex < trainSet.size(); sampleIndex++ )
+		{
+			std::vector<double> outputs = n.train(trainSet[sampleIndex]);
+			std::cout << std::boolalpha << "Expected: " << (trainEtalons[sampleIndex][0] == 1) << " ";
 
-            std::cout << std::endl;
-        }
+			for ( auto out : outputs )
+				std::cout << std::boolalpha << out << " ";
 
-        std::cout << std::endl;
+			std::cout << '\n';
+		}		
     } catch ( std::exception & exception )
     {
         std::cerr << "Error: " << exception.what() << std::endl;

@@ -72,17 +72,57 @@ namespace ann
         return outputs;
     }
 
-    std::vector<double> Network::getErrors ( std::vector<double> outputs, std::vector<double> etalons )    
+    std::vector<std::vector<double>> Network::train ( std::vector<std::vector<double>> samples )
+    {
+        std::vector<std::vector<double>> outputs;
+
+        for ( std::vector<double> & inputs : samples )
+            outputs.push_back(train(inputs));
+
+        return outputs;
+    }
+
+    // handle only one vector of training data
+    double Network::calculationMSE ( std::vector<double> inputs, std::vector<double> etalons )
+    {
+        double sampleErr = 0;
+        std::vector<double> outputs = train(inputs);
+        std::vector<double> errors = getErrors(outputs, etalons);
+
+        for ( auto it = errors.begin(); it != errors.end(); ++it )
+            sampleErr += (*it) * (*it);
+        
+        sampleErr /= outputs.size();
+
+        return sampleErr;
+    }
+
+    // handle set training data
+    double Network::calculationMSE ( std::vector<std::vector<double>> samples, std::vector<std::vector<double>> etalons )
+    {
+        double result = 0;
+        size_t nSamples = samples.size();
+
+        if ( etalons.size() != nSamples )
+            throw std::runtime_error("Count samples must be equal count of etalons");
+
+        for ( size_t sampleIndex = 0; sampleIndex < nSamples; sampleIndex++ )
+            result += calculationMSE(samples[sampleIndex], etalons[sampleIndex]);
+
+        return result / nSamples;
+    }
+
+    std::vector<double> Network::getErrors ( std::vector<double> outputs, std::vector<double> etalons )
     {
         std::vector<double> errors;
 
         for ( size_t index = 0; index < outputs.size(); index++ )
-            errors.push_back(etalons[index] - outputs[index]);
+            errors.push_back(outputs[index] - etalons[index]);
 
         return errors;
     }
 
-    std::vector<double> Network::correctWeights ( std::vector<double> outputs, std::vector<double> etalons )
+    void Network::correctWeights ( std::vector<double> outputs, std::vector<double> etalons )
     {
         if ( m_layers.back() != etalons.size() )
             throw std::runtime_error("Invalid etalons size");
@@ -96,11 +136,18 @@ namespace ann
             size_t nIndex = (m_neurons.size() - (outputs.size() + lastHiddenLayer));
 
             for ( ; nIndex < (m_neurons.size() - outputs.size()); nIndex++ )
-            {
                 (*m_neurons[nIndex]).correctWeights(m_learningRate, weights_delta, (*m_neurons[nIndex]).getLayerNeuronIndex());
-            }
         }
+    }
 
-        return errors;
+    void Network::correctWeights ( std::vector<std::vector<double>> outputs, std::vector<std::vector<double>> etalons )
+    {
+        size_t nOutputs = outputs.size();
+
+        if ( etalons.size() != nOutputs )
+            throw std::runtime_error("Count outputs must be equal count of etalons");
+
+        for ( size_t indexOutput = 0; indexOutput < nOutputs; indexOutput++ )
+            correctWeights(outputs[indexOutput], etalons[indexOutput]);
     }
 };

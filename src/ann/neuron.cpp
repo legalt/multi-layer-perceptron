@@ -58,7 +58,7 @@ namespace {
 
             virtual void correctWeights ( double learningRate, double delta, size_t nNeuronIndex = 0 )
             {
-                double error = 0;
+                double error = 0.0;
 
                 m_weights[nNeuronIndex] = m_weights[nNeuronIndex] - (m_input * delta * learningRate);    
                 error = m_weights[nNeuronIndex] * delta;
