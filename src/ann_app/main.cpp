@@ -1,100 +1,65 @@
-#include "ann/network.h"
+#include "ann/mlp.h"
 #include <vector>
 #include <iostream>
 #include <utility>
 
-// values: (0, 1)
-class Sigmoid: public ann::IActivation
-{
-	public:
-		virtual double activate ( double x )
-		{
-			return (2 * x / (1.0 + fabs(x)));
-		}
 
-		virtual double derivative ( double x )
-		{
-			double temp = 1.0 + fabs(x);
-			return 2 / (temp * temp);
-		}
-};
+int main () {
+    // Ann::SigmoidActivation sig;
+    // Ann::ReLuActivation relu;
 
-// values (-1, 1)
-class BipolarSigmoid: public ann::IActivation
-{
-    public:
-        virtual double activate ( double x )
-        {
-            return (2 / (1 + exp(-x))) - 1;
-        }
+    // std::vector<size_t> inputs{15,5,10};
+    // std::vector<Ann::IActivation*> acts{&relu, &relu, &sig};
 
-        virtual double derivative ( double x )
-        {
-            return (0.5 * (1 + x)) * (1 - x);
-        }
-};
+    // Ann::MLP mlp(inputs, acts, 0.05);
 
+    std::vector<std::vector<double>> trainSet = {
+        {1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1},
+        {0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1},
+        {1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1},
+        {1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+        {1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1},
+        {1, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1},
+        {1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1},
+        {1, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1},
+        {1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1},
+        {1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1}
+    };
 
-int main ( int argc, char *argv[] )
-{
-    try {
-        Sigmoid sig;
-        ann::Network n({3,2,1}, 0.07, sig);        
+    // std::vector<std::vector<double>> etalons = {
+    //     {1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    //     {0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+    //     {0, 0, 1, 0, 0, 0, 0, 0, 0, 0},
+    //     {0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
+    //     {0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
+    //     {0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
+    //     {0, 0, 0, 0, 0, 0, 1, 0, 0, 0},
+    //     {0, 0, 0, 0, 0, 0, 0, 1, 0, 0},
+    //     {0, 0, 0, 0, 0, 0, 0, 0, 1, 0},
+    //     {0, 0, 0, 0, 0, 0, 0, 0, 0, 1}
+    // };
 
-		std::vector<std::vector<double>> trainSet = {
-			{0, 0, 1},
-			{0, 1, 0},
-			{0, 1, 1},
-			{1, 0, 0},
-			{1, 0, 1},
-			{1, 1, 0},
-			{1, 1, 1}
-		};
+    // for ( int i = 0; i < 5000; i++ ) {
+    //     for ( int nSample = 0; nSample < trainSet.size(); nSample++ ) {
+    //         mlp.train(trainSet[nSample]);
+    //         mlp.backProp(etalons[nSample]);
+    //     }
+    // }
 
-		std::vector<std::vector<double>> trainEtalons = {
-			{1},
-			{0},
-			{0},
-			{1},
-			{1},
-			{1},
-			{0}
-		};
-        
-        size_t epochs = 10000;
-		double minError = .2;
+    // mlp.save("./back");
 
-		double error = 0;
-        for ( size_t index = 0; index < epochs; index++ )
-        {    
-			error = n.calculationMSE(trainSet, trainEtalons);
-			
-			if ( error <= minError )
-			{
-				std::cout <<" 1123123\n";
-				break;
-			}
-
-			n.correctWeights(trainSet, trainEtalons);
-        }
-
-		std::cout << "MSE Error: " << error << '\n';
-
-		for ( size_t sampleIndex = 0; sampleIndex < trainSet.size(); sampleIndex++ )
-		{
-			std::vector<double> outputs = n.train(trainSet[sampleIndex]);
-			std::cout << std::boolalpha << "Expected: " << (trainEtalons[sampleIndex][0] == 1) << " ";
-
-			for ( auto out : outputs )
-				std::cout << std::boolalpha << out << " ";
-
-			std::cout << '\n';
-		}		
-    } catch ( std::exception & exception )
     {
-        std::cerr << "Error: " << exception.what() << std::endl;
-        return 1;
+        auto mlp = ann::MLP::load("./back");
+        for ( int i = 0; i < trainSet.size(); i++ ) {
+            
+            auto outs = mlp->train(trainSet[i]);
+            for ( auto n: outs )
+                std::cout << (n > 0.9 ? "true" : "false") << ' ';
+            std::cout << '\n';
+        }
+
+        mlp.reset();
     }
 
     return 0;
-}
+};
