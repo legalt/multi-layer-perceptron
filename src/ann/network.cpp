@@ -3,6 +3,7 @@
 #include <memory>
 #include <stdio.h>
 #include <iostream>
+#include <fstream>
 
 namespace ann
 {
@@ -16,42 +17,63 @@ namespace ann
     
     void Network::init ( const std::vector<size_t> & layers )
     {
-        if ( layers.size() <= 2 )
+        if ( layers.size() < 2 )
                 throw std::runtime_error("Invalid size layers");
 
-            size_t countNeurons = 0;
-            int layerIndex = layers.size();
+        size_t countNeurons = 0;
+        int layerIndex = layers.size();
 
-            for ( auto it = layers.rbegin(); it != layers.rend(); ++it )
+        for ( auto it = layers.rbegin(); it != layers.rend(); ++it )
+        {
+            size_t lastLayerSize = 0;
+
+            if ( countNeurons > 0 ) lastLayerSize = countNeurons;
+
+            countNeurons = (*it);
+
+            if ( countNeurons <= 0 )
+                throw std::runtime_error("Invalid layers size, must be > 0");
+
+            for ( size_t index = 0; index < countNeurons; index++ )
             {
-                size_t lastLayerSize = 0;
+                auto neuron = ann::createNeuron(layerIndex, index, m_activation, lastLayerSize);
 
-                if ( countNeurons > 0 ) lastLayerSize = countNeurons;
-
-                countNeurons = (*it);
-
-                if ( countNeurons <= 0 )
-                    throw std::runtime_error("Invalid layers size, must be > 0");
-
-                for ( size_t index = 0; index < countNeurons; index++ )
+                if ( lastLayerSize > 0 )
                 {
-                    auto neuron = ann::createNeuron(layerIndex, index, m_activation, lastLayerSize);
+                    size_t prevLayerIndex = (m_neurons.size() - (index + lastLayerSize));
 
-                    if ( lastLayerSize > 0 )
-                    {
-                        size_t prevLayerIndex = (m_neurons.size() - (index + lastLayerSize));
-
-                        for ( ; prevLayerIndex < (m_neurons.size() - index); prevLayerIndex++)
-                            (*m_neurons[prevLayerIndex]).addChild(&(*neuron));
-                    }
-
-                    m_neurons.push_back(neuron);
+                    for ( ; prevLayerIndex < (m_neurons.size() - index); prevLayerIndex++)
+                        (*m_neurons[prevLayerIndex]).addChild(&(*neuron));
                 }
 
-                layerIndex--;
+                m_neurons.push_back(neuron);
             }
 
+            layerIndex--;
+        }
+
         std::reverse(m_neurons.begin(), m_neurons.end());
+    }
+
+    void Network::safeWeights ( const std::string & fileName )
+    {
+        std::ofstream fileBackup(fileName, std::ofstream::binary);
+        
+        if ( !fileBackup.is_open() )
+        {
+            std::cerr << "Can't create file backup\n";
+            return;
+        }
+
+        fileBackup << m_layers.size();
+
+        for ( size_t nLayer : m_layers )
+            fileBackup << nLayer;
+    }
+
+    void Network::loadWeights ( const std::string & fileName )
+    {
+
     }
 
     std::vector<double> Network::train ( std::vector<double> inputs )

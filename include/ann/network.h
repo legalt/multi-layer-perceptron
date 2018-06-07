@@ -30,6 +30,9 @@ namespace ann
         Network ( const std::vector<size_t> & layers, double learningRate, IActivation & activation );
 
         inline std::vector<std::shared_ptr<INeuron>> getNeurons () { return m_neurons; }
+
+        void safeWeights ( const std::string & fileName );
+        void loadWeights ( const std::string & fileName );
     private:
         std::vector<std::shared_ptr<INeuron>> m_neurons;
         std::vector<size_t> m_layers;

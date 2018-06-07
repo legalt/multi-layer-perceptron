@@ -14,6 +14,7 @@ namespace ann {
             virtual double getInput() = 0;
             virtual void addChild(ann::INeuron*) = 0;
             virtual double getWeight(size_t neuronIndex) = 0;
+            virtual std::vector<double> getWeights() = 0;
             virtual std::vector<ann::INeuron*> getPrevLayer() = 0;
             virtual void correctWeights ( double, double, size_t = 0 ) = 0;
     };

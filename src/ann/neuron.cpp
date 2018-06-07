@@ -29,7 +29,8 @@ namespace {
 
             virtual size_t getLayerIndex () { return m_layerIndex; }
             virtual size_t getLayerNeuronIndex () { return m_layerNeuronIndex; }
-            virtual double getWeight( size_t index ) { return m_weights[index];}
+            virtual double getWeight ( size_t index ) { return m_weights[index];}
+            virtual std::vector<double> getWeights() { return m_weights; }
         
             virtual double getOutput( )
             {
@@ -60,7 +61,7 @@ namespace {
             {
                 double error = 0.0;
 
-                m_weights[nNeuronIndex] = m_weights[nNeuronIndex] - (m_input * delta * learningRate);    
+                m_weights[nNeuronIndex] = m_weights[nNeuronIndex] + (m_input * delta * learningRate);    
                 error = m_weights[nNeuronIndex] * delta;
 
                 for ( auto & child : m_childs )
