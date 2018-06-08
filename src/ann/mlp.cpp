@@ -5,6 +5,7 @@
 #include <math.h>
 #include <algorithm>
 #include <fstream>
+#include <sstream>
 
 namespace {
     double get_rand_value ( double min, double max )
@@ -100,7 +101,14 @@ namespace ann
 
     std::vector<double> MLP::train ( std::vector<double> inputs )  {
         if ( inputs.size() != m_layers.front() )
-            throw std::runtime_error("Invalid size of training data");
+        {
+            std::stringstream errStream;            
+            errStream << "Invalid size of training data! Expected: "
+                      << (m_layers.front())
+                      << ", real: " << (inputs.size());
+
+            throw std::runtime_error(errStream.str());
+        }
 
         std::vector<double> tLastLayerInputs = inputs;                
         const double bias = 1.0;
@@ -148,8 +156,15 @@ namespace ann
     }
 
     void MLP::backProp ( std::vector<double> outputs ) {
-        if ( outputs.size() != m_layers.back() )
-            throw std::runtime_error("Invalid size of etalons data");
+        if ( outputs.size() != m_layers.back() ) {            
+            std::stringstream errStream;
+            
+            errStream << "Invalid size of etalons data! Expected: "
+                      << (m_layers.back())
+                      << ", real: " << (outputs.size());
+
+            throw std::runtime_error(errStream.str());
+        }
 
         for ( size_t nOutput = 0; nOutput < m_outputs.size(); nOutput++ ) {
             const double output = m_outputs[nOutput];

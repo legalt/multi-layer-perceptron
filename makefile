@@ -25,3 +25,9 @@ annApp:
 
 annApp_clean:
 	$(VERBOSE)rm -rf ./.$(INFOMIR_MODEL_NAME)/bin/annApp ./.$(INFOMIR_MODEL_NAME)/build/annApp
+
+annAppMnist:
+	$(VERBOSE)make $(JOB_FLAG) -f $(imake_dir)/build.mk TARGET=annAppMnist PROJECT=./mk/annAppMnist.mk
+
+annAppMnist_clean:
+	$(VERBOSE)rm -rf ./.$(INFOMIR_MODEL_NAME)/bin/annAppMnist ./.$(INFOMIR_MODEL_NAME)/build/annAppMnist
