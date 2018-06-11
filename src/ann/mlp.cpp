@@ -89,7 +89,7 @@ namespace ann
         size_t index = m_wIndexedDB[layerNo];
         size_t pos = index + (neuronNo * m_layers[layerNo + 1]) + weightNo;
 
-            m_weights[pos] = weight;
+        m_weights[pos] = weight;
     }
 
     double MLP::getWeight ( size_t layerNo, size_t neuronNo, size_t weightNo ) {
@@ -110,24 +110,26 @@ namespace ann
             throw std::runtime_error(errStream.str());
         }
 
-        std::vector<double> tLastLayerInputs = inputs;                
-        const double bias = 1.0;
+        std::vector<double> tLastLayerInputs = inputs;
+        const double bias = 0.0;
+
         m_inputs.clear();
         m_outputs.clear();
 
         for ( auto input : inputs ) {
             m_inputs.push_back(input);
-        }             
+        }
 
         for ( size_t nLayer = 0; nLayer < m_layers.size() - 2; nLayer++ ) {
-            size_t nNextLayer = m_layers[nLayer + 1];                                        
+            size_t nNextLayer = m_layers[nLayer + 1];
             std::vector<double> tInputs_2;
             
             for ( size_t nWeight = 0; nWeight < nNextLayer; nWeight++ ) {
                 double sum = 0.0;
 
                 for ( size_t nNeuron = 0; nNeuron < m_layers[nLayer]; nNeuron++ ) {   
-                    sum += getWeight(nLayer, nNeuron, nWeight) * tLastLayerInputs[nNeuron];
+                    double weight = getWeight(nLayer, nNeuron, nWeight);
+                    sum += weight * tLastLayerInputs[nNeuron];
                 }
 
                 sum = m_activations[nLayer]->activation(sum + bias);
@@ -168,9 +170,11 @@ namespace ann
 
         for ( size_t nOutput = 0; nOutput < m_outputs.size(); nOutput++ ) {
             const double output = m_outputs[nOutput];
-            const double error = (outputs[nOutput] - output);
+            const double error = output -  outputs[nOutput];
             double delta_weights = (error * m_activations.back()->deriavate(output));
 
+            // std::cout << "output: " << output << ", err: " << error
+            //     << " delta_weights: " << delta_weights << " dx: " << m_activations.back()->deriavate(output) << '\n';
             std::vector<double> hLayerErrors;
 
             int pos = m_layers.size() - 2;
@@ -191,7 +195,7 @@ namespace ann
                     for ( size_t errIndex = 0; errIndex < hLayerErrors.size(); errIndex++ ) {
                         for ( size_t nNeuron = 0; nNeuron < layerSize; nNeuron++ ) {
                             const double oldWeight = getWeight(pos, nNeuron, errIndex);
-                            const double output = m_activations[pos]->activation(inputs[nNeuron] * oldWeight);
+                            const double output = m_activations[0]->activation(inputs[nNeuron] * oldWeight);
                             delta_weights = hLayerErrors[errIndex];
                             
                             const double newWeight = oldWeight + delta_weights * m_learningRate * inputs[nNeuron];
@@ -211,7 +215,7 @@ namespace ann
 
                     for ( size_t index = 0; index < layerSize; index++ ) {
                         double w = getWeight(pos, index, nOutput) + 
-                                    inputs[index] * delta_weights * m_learningRate;
+                                    inputs[index] * delta_weights * m_learningRate;                        
                         hLayerErrors.push_back(w * delta_weights);
                         setWeight(pos, index, nOutput, w);
                     }
@@ -223,31 +227,44 @@ namespace ann
         }
     }
     
-        void MLP::initialize_indexes () {
-            m_nOutputs = m_layers.back();
-            size_t nInputs = m_layers[0];
-            m_wIndexedDB.push_back(0);
-            size_t nWeights = 0;
-            size_t nNeurons = m_layers.front();
+    void MLP::initialize_indexes () {
+        m_nOutputs = m_layers.back();
+        size_t nInputs = m_layers[0];
+        m_wIndexedDB.push_back(0);
+        size_t nWeights = 0;
+        size_t nNeurons = m_layers.front();
 
-            for ( int nLayer = 1; nLayer < m_layers.size(); nLayer++ ) {
-                size_t index = m_wIndexedDB.back() + m_layers[nLayer - 1] * m_layers[nLayer];
+        for ( int nLayer = 1; nLayer < m_layers.size(); nLayer++ ) {
+            size_t index = m_wIndexedDB.back() + m_layers[nLayer - 1] * m_layers[nLayer];
 
-                m_wIndexedDB.push_back(index);
-                nWeights += index;
-                nNeurons += m_layers[nLayer];
-            }
+            m_wIndexedDB.push_back(index);
+            nWeights += index;
+            nNeurons += m_layers[nLayer];
         }
+    }
 
-        void MLP::initialize_weights () {
-            for ( size_t nLayer = 0; nLayer < m_layers.size() - 1; nLayer++ ) {
-                size_t nNextLayer = m_layers[nLayer + 1];
+    void MLP::initialize_weights () {
+        for ( size_t nLayer = 0; nLayer < m_layers.size() - 1; nLayer++ ) {
+            size_t nNextLayer = m_layers[nLayer + 1];
 
-                for ( size_t nNeuron = 0; nNeuron < m_layers[nLayer]; nNeuron++ ) {
-                    for ( size_t nWeight = 0; nWeight < nNextLayer; nWeight++ ) {
-                        m_weights.push_back(get_rand_value(0.0, 1.0));                            
-                    }
+            for ( size_t nNeuron = 0; nNeuron < m_layers[nLayer]; nNeuron++ ) {
+                for ( size_t nWeight = 0; nWeight < nNextLayer; nWeight++ ) {
+                    m_weights.push_back(get_rand_value(-1.0, 1.0));                            
                 }
             }
         }
+    }
+
+    double MLP::getMse ( std::vector<double> inputs, std::vector<double> desired ) {
+        double error = 0.0;
+        auto outputs = train(inputs);
+
+        for ( size_t index = 0; index < outputs.size(); index++ ) {
+            double tError = desired[index] - outputs[index];
+
+            error += (tError * tError);
+        }
+
+        return error / outputs.size();
+    }
 } // ann

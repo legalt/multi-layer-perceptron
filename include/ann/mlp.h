@@ -71,6 +71,7 @@ namespace ann
 
             void backProp ( std::vector<double> outputs );
 
+            double getMse ( std::vector<double> inputs, std::vector<double> desired );
         private:
             void initialize_indexes ();
 

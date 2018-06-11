@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <math.h>
+#include <iostream>
 
 namespace ann {
     class IActivation {
@@ -12,7 +13,7 @@ namespace ann {
 
     class SigmoidActivation: public IActivation {
         public:
-            inline double activation ( double x ) { return 1 / ( 1 + exp(-x)); }
+            inline double activation ( double x ) { return 1.0 / ( 1.0 + exp(-x)); }
 
             inline double deriavate ( double x ) { return x * (1.0 - x); }
 
@@ -33,9 +34,9 @@ namespace ann {
 
     IActivation * getActivation( size_t type ) {        
         switch ( type ) {
-            case 1:
+            case RELU:
                 return new ReLuActivation();
-            case 0:
+            case SIG:
             default:
                 return new SigmoidActivation();
         }
