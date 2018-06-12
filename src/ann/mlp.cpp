@@ -1,4 +1,4 @@
-#include "ann/mlp.h";
+#include "ann/mlp.h"
 #include "activation.h"
 #include <ios>
 #include <iostream>
@@ -111,7 +111,7 @@ namespace ann
         }
 
         std::vector<double> tLastLayerInputs = inputs;
-        const double bias = 0.0;
+        const double bias = 1.0;
 
         m_inputs.clear();
         m_outputs.clear();
@@ -173,8 +173,14 @@ namespace ann
             const double error = output -  outputs[nOutput];
             double delta_weights = (error * m_activations.back()->deriavate(output));
 
-            // std::cout << "output: " << output << ", err: " << error
-            //     << " delta_weights: " << delta_weights << " dx: " << m_activations.back()->deriavate(output) << '\n';
+            if ( delta_weights == 0 && output > 0 && outputs[nOutput] <= 0 )
+            {                
+                // std::cout << "output: " << output << ", err: " << error
+                // << " target: " << outputs[nOutput]
+                // << " delta_weights: " << delta_weights << " dx: " << m_activations.back()->deriavate(output) << '\n';
+                delta_weights = -0.1;
+            }
+
             std::vector<double> hLayerErrors;
 
             int pos = m_layers.size() - 2;
