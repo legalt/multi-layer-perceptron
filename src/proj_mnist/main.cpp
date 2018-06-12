@@ -65,7 +65,7 @@ void printHelp () {
 void trainNetwork ( size_t epochs, size_t nSamples, ann::MLP & network, Samples images, std::vector<uint8_t> labels ) {
     try {
         for ( size_t iter = 0; iter < epochs; iter++ ) {
-            for ( size_t nImage = 0; nImage <= nSamples; nImage++ ) {
+            for ( size_t nImage = 0; nImage < nSamples; nImage++ ) {
                 network.train(images[nImage]);
 
                 // std::cout << labels.size() << std::endl;
@@ -79,7 +79,7 @@ void trainNetwork ( size_t epochs, size_t nSamples, ann::MLP & network, Samples 
                 std::cout << "\r"
                             << "epoch: " << iter
                             << "\tprogress: " << progress
-                            << "% \t\tmse: " << mse
+                            << "\t\tmse: " << ((int)(mse * 100))
                             << std::flush;
             }
         }
@@ -118,14 +118,21 @@ void recognizeImage ( ann::MLP & network, std::vector<double> image, std::vector
             
     outs = network.train(image);
 
-    {
+    {   
+        std::cout << "\n\n#\t\t\treal\t\tetalon\n";
         size_t index = 0;        
-        for ( auto out: outs )
-            std::cout << (index++) << ": " << (out > 0.3 ? 1 : 0)            
-            << "\t\t" << std::setprecision(5) << out << std::fixed << '\n';        
+        
+        for ( auto out: outs ) {
+            std::cout << std::boolalpha << (index) << ": " << std::setw(5) << (out > 0.3)            
+                        << "\t\t" << std::setprecision(3) 
+                        << out << std::fixed 
+                        << "\t\t" << etalon[index]<< '\n';        
+
+            index++;
+        }
     }
 
-    std::cout << "mse: " << network.getMse(image, etalon) << '\n';
+    std::cout << "ERROR: " << ((int)(network.getMse(image, etalon) * 100)) << '%' << '\n';
 
     printImage(image);
 
@@ -143,6 +150,11 @@ void handle_command ( const char * arg ) {
         std::cout << "Folder with mnist database: ";
         std::cin >> path;
 
+        if ( path.empty() || path.size() < 5 ) {
+            std::cout << "using default db path\n";
+            path = "./src/proj_mnist/mnist/";
+        }
+
         mnist::MNIST_dataset<std::vector, std::vector<uint8_t>, uint8_t> dataset =
         mnist::read_dataset<std::vector, std::vector, uint8_t, uint8_t>(path);
 
@@ -153,20 +165,20 @@ void handle_command ( const char * arg ) {
 
         std::vector<ann::IActivation*> atcs = {
             ann::getActivation(ann::RELU),
-            ann::getActivation(ann::RELU),
-            ann::getActivation(ann::SIG)
+            ann::getActivation(ann::SIG),
+            // ann::getActivation(ann::SIG)
         };
-        ann::MLP mlp({784, 400, 10}, atcs, 0.03);        
+        ann::MLP mlp({784, 10}, atcs, 0.06);        
         std::cout << "inited network\n";        
         
         std::cout << "training\n";
-        size_t setSize = 5; //dataset.training_images.size()
-        const size_t epochs = 100;
+        size_t setSize = 60000;
+        const size_t epochs = 10;
 
         trainNetwork(epochs, setSize, mlp, images, dataset.training_labels);
 
-        auto outs = mlp.train(images[3]);
-        
+        size_t imgLabel = (size_t)(dataset.training_labels[0]);
+        recognizeImage(mlp, images[0], etalons[imgLabel]);
         std::string backPath;
         std::cout << "\nBackup weight path: ";
         std::cin >> backPath;
@@ -186,7 +198,7 @@ void handle_command ( const char * arg ) {
         std::cin >> path;
 
         if ( path.empty() || path.size() < 5 ) {
-            std::cout << "using default\n";
+            std::cout << "using default db path\n";
             path = "./src/proj_mnist/mnist/";
         }
 
@@ -196,19 +208,24 @@ void handle_command ( const char * arg ) {
         const auto & images = loadDataBase(dataset.training_images);
         
         try {
-            std::string index_;
-            std::cout << "Image index: ";
-            std::cin >> index_;
-            size_t index = boost::lexical_cast<size_t>(index_);            
+            auto retry = [&]() {
+                std::string index_;
+                std::cout << "Image index: ";
+                std::cin >> index_;
+                size_t index = boost::lexical_cast<size_t>(index_);            
+                size_t imgLabel = (size_t)(dataset.training_labels[index]);
+                recognizeImage(*mlp, images[index], etalons[imgLabel]);
+            };
+            
+            retry();
 
             while ( true ) {
-                recognizeImage(*mlp, images[index], etalons[index]);
-                std::cout << "Relearn this image [y/n]?: ";
+                std::cout << "Repeat [y/n]?: ";
                 std::string apply;
                 std::cin >> apply;
                 
                 if ( apply == "y" ) {
-                    trainNetwork(10, 10, *mlp, images, dataset.training_labels);
+                    retry();
                 } else {
                     exit(0);
                 }

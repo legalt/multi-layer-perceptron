@@ -157,28 +157,28 @@ namespace ann
         return m_outputs;
     }
 
-    void MLP::backProp ( std::vector<double> outputs ) {
-        if ( outputs.size() != m_layers.back() ) {            
+    void MLP::backProp ( std::vector<double> desired ) {
+        if ( desired.size() != m_layers.back() ) {            
             std::stringstream errStream;
             
             errStream << "Invalid size of etalons data! Expected: "
                       << (m_layers.back())
-                      << ", real: " << (outputs.size());
+                      << ", real: " << (desired.size());
 
             throw std::runtime_error(errStream.str());
         }
 
         for ( size_t nOutput = 0; nOutput < m_outputs.size(); nOutput++ ) {
             const double output = m_outputs[nOutput];
-            const double error = output -  outputs[nOutput];
+            const double error = desired[nOutput] - output;
             double delta_weights = (error * m_activations.back()->deriavate(output));
 
-            if ( delta_weights == 0 && output > 0 && outputs[nOutput] <= 0 )
+            if ( delta_weights == 0 && output > 0 && desired[nOutput] <= 0 )
             {                
                 // std::cout << "output: " << output << ", err: " << error
-                // << " target: " << outputs[nOutput]
+                // << " target: " << desired[nOutput]
                 // << " delta_weights: " << delta_weights << " dx: " << m_activations.back()->deriavate(output) << '\n';
-                delta_weights = -0.1;
+                // delta_weights = -0.1;
             }
 
             std::vector<double> hLayerErrors;
@@ -250,12 +250,17 @@ namespace ann
     }
 
     void MLP::initialize_weights () {
+        double variance;
+
         for ( size_t nLayer = 0; nLayer < m_layers.size() - 1; nLayer++ ) {
             size_t nNextLayer = m_layers[nLayer + 1];
 
+            variance = 1.0 / sqrt(nNextLayer);
+
             for ( size_t nNeuron = 0; nNeuron < m_layers[nLayer]; nNeuron++ ) {
+
                 for ( size_t nWeight = 0; nWeight < nNextLayer; nWeight++ ) {
-                    m_weights.push_back(get_rand_value(-1.0, 1.0));                            
+                    m_weights.push_back(get_rand_value(-variance, variance));                            
                 }
             }
         }
