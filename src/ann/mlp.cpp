@@ -22,8 +22,10 @@ namespace ann
         , m_activations(activations)
         , m_learningRate(learningRate)
     {
-        if ( layers.size() != activations.size() )
-            throw std::runtime_error("Count layers and activations must be one size");
+        #ifndef NODEJS
+            if ( layers.size() != activations.size() )
+                throw std::runtime_error("Count layers and activations must be one size");
+        #endif // !NODEJS        
 
         initialize_indexes();
         initialize_weights();
@@ -36,8 +38,10 @@ namespace ann
         , m_learningRate(learningRate)
         , m_weights(weights)
     {
-        if ( layers.size() != activations.size() )
-            throw std::runtime_error("Count layers and activations must be one size");
+        #ifndef NODEJS
+            if ( layers.size() != activations.size() )
+                throw std::runtime_error("Count layers and activations must be one size");
+        #endif
 
         
         initialize_indexes();
@@ -50,9 +54,16 @@ namespace ann
         m_activations.clear();
     }
 
-    void MLP::save ( const std::string & fileName ) {
+    void MLP::save ( const std::string & fileName ) {        
         if ( m_outputs.empty() )
-            throw std::runtime_error("Must be trained ann for save");
+        {
+            #ifndef NODEJS
+                throw std::runtime_error("Must be trained ann for save");
+            #endif
+
+            return;
+        }
+        
         
         std::ofstream fOut(fileName, std::ios::binary);
 
@@ -102,12 +113,17 @@ namespace ann
     std::vector<double> MLP::train ( std::vector<double> inputs )  {
         if ( inputs.size() != m_layers.front() )
         {
-            std::stringstream errStream;            
-            errStream << "Invalid size of training data! Expected: "
-                      << (m_layers.front())
-                      << ", real: " << (inputs.size());
+            #ifndef NODEJS
+                std::stringstream errStream;            
+                errStream << "Invalid size of training data! Expected: "
+                        << (m_layers.front())
+                        << ", real: " << (inputs.size());
 
-            throw std::runtime_error(errStream.str());
+            
+                throw std::runtime_error(errStream.str());
+            #endif
+
+            return {};
         }
 
         std::vector<double> tLastLayerInputs = inputs;
@@ -158,14 +174,18 @@ namespace ann
     }
 
     void MLP::backProp ( std::vector<double> desired ) {
-        if ( desired.size() != m_layers.back() ) {            
-            std::stringstream errStream;
+        if ( desired.size() != m_layers.back() ) {
+            #ifndef NODEJS
+                std::stringstream errStream;
             
-            errStream << "Invalid size of etalons data! Expected: "
-                      << (m_layers.back())
-                      << ", real: " << (desired.size());
+                errStream << "Invalid size of etalons data! Expected: "
+                        << (m_layers.back())
+                        << ", real: " << (desired.size());
 
-            throw std::runtime_error(errStream.str());
+                throw std::runtime_error(errStream.str());
+            #endif
+            
+            return;
         }
 
         for ( size_t nOutput = 0; nOutput < m_outputs.size(); nOutput++ ) {

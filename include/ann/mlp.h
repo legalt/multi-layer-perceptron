@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <memory>
 #include <fstream>
+#include <boost/optional.hpp>
 
 namespace ann
 {
@@ -29,11 +30,11 @@ namespace ann
 
             void save ( const std::string & fileName );
 
-            static std::shared_ptr<MLP> load ( const std::string & fileName ) {
+            static boost::optional<std::shared_ptr<MLP>> load ( const std::string & fileName ) {
                 std::ifstream fIn(fileName, std::ios::binary);
 
                 if ( !fIn.is_open() ) {
-                    throw std::runtime_error("Could not open file of backup");
+                    return {};
                 }
 
                 double learnRate;
