@@ -1,3 +1,56 @@
+function trim(c) {
+    var ctx = c.getContext('2d'),
+      copy = document.createElement('canvas').getContext('2d'),
+      pixels = ctx.getImageData(0, 0, c.width, c.height),
+      l = pixels.data.length,
+      i,
+      bound = {
+        top: null,
+        left: null,
+        right: null,
+        bottom: null
+      },
+      x, y;
+  
+    for (i = 0; i < l; i += 4) {
+      if (pixels.data[i+3] !== 0) {
+        x = (i / 4) % c.width;
+        y = ~~((i / 4) / c.width);
+    
+        if (bound.top === null) {
+          bound.top = y;
+        }
+        
+        if (bound.left === null) {
+          bound.left = x; 
+        } else if (x < bound.left) {
+          bound.left = x;
+        }
+        
+        if (bound.right === null) {
+          bound.right = x; 
+        } else if (bound.right < x) {
+          bound.right = x;
+        }
+        
+        if (bound.bottom === null) {
+          bound.bottom = y;
+        } else if (bound.bottom < y) {
+          bound.bottom = y;
+        }
+      }
+    }
+      
+    var trimHeight = bound.bottom - bound.top,
+        trimWidth = bound.right - bound.left,
+        trimmed = ctx.getImageData(bound.left, bound.top, trimWidth, trimHeight);
+    copy.canvas.width = trimWidth;
+    copy.canvas.height = trimHeight;
+    copy.putImageData(trimmed, 0, 0);
+    // open new window with trimmed image:
+    return copy.canvas;
+  }
+
 (function () {
     let $canvas = window.Paint,
         paint = false,                
@@ -82,29 +135,61 @@
         }
     }
 
+    function showChart ( data ) {
+        Chart.defaults.global.tooltips.enabled = false;
+
+        var $graphicCanvas = document.getElementById("Graphic"),
+            ctx = $graphicCanvas.getContext('2d'),
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ["0", "1", "2", "3", "4", "5", '6', '7','8', '9'],
+                    datasets: [{
+                        label: '',
+                        data: data,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        yAxes: [{
+                            ticks: {
+                                beginAtZero:true
+                            }
+                        }]
+                    }
+                }
+            });
+    }
+
 
     window.recognize.addEventListener('click', function () {
-        let img = new Image(28, 28);
+        let img = new Image(28, 28),
+            $trimCanvas = trim($canvas),
+            trimContext = $trimCanvas.getContext("2d");
         
-        img.onload = function () {
-            context.clearRect(0, 0, 250, 250);
+        img.onload = function () {            
+            trimContext.clearRect(0, 0, 250, 250);
+            trimContext.drawImage(img, 0, 0, 250, 250, 0, 0, 48, 48);
             
-            context.drawImage(img, 0, 0, 250, 250, 0, 0, 28, 28);
-
-            let imgData = context.getImageData(0, 0, 28, 28),
+            let imgData = trimContext.getImageData(0, 0, 28, 28),
                 pixels = imgData.data,
                 xhr = new XMLHttpRequest(),
                 newPixels = [];
             
-            context.clearRect(0, 0, 250, 250);
-                
             for ( let index = 0; index < pixels.length; index += 4 ) {
-                let pixel = 0.34 * pixels[index] + 0.5 * pixels[index + 1] + 0.16 * pixels[index + 2];
+                let brightness = (pixels[index] +  pixels[index + 1] + pixels[index + 2]) / 3;
                 
-                newPixels.push(pixel / 255);
+                newPixels.push(brightness / 255);
+
+                pixels[index] = brightness;
+                pixels[index + 1] = brightness;
+                pixels[index + 2] = brightness;
             }
+
+            context.putImageData(imgData, 0, 0);
             
-            xhr.open('POST', 'http://10.110.22.68:8080', true);
+            xhr.open('POST', 'http://10.110.22.68:8000', true);
 
             xhr.onreadystatechange = function () {
                 if ( this.readyState !== 4 ) return;
@@ -114,12 +199,14 @@
                     index = result.indexOf(item);
                 
                 window.res.value = index === -1 ? "Not recognized" : index;
+                
+                showChart(result);
             };
 
             xhr.send(newPixels);
         }
 
-        img.src = $canvas.toDataURL();
+        img.src = $trimCanvas.toDataURL();
         clickX = [];
         clickY = [];
         clickDrag = [];
