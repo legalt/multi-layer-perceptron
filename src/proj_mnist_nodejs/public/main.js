@@ -189,7 +189,7 @@ function trim(c) {
 
             context.putImageData(imgData, 0, 0);
             
-            xhr.open('POST', 'http://10.110.22.68:8000', true);
+            xhr.open('POST', 'http://localhost:8000', true);
 
             xhr.onreadystatechange = function () {
                 if ( this.readyState !== 4 ) return;

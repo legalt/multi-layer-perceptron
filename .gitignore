@@ -1,2 +1,5 @@
 .pc
 .vscode
+src/proj_mnist_nodejs/build/
+src/proj_mnist_nodejs/node_modules/
+src/proj_mnist_nodejs/package-lock.json

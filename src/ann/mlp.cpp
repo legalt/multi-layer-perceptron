@@ -260,7 +260,7 @@ namespace ann
         size_t nWeights = 0;
         size_t nNeurons = m_layers.front();
 
-        for ( int nLayer = 1; nLayer < m_layers.size(); nLayer++ ) {
+        for ( size_t nLayer = 1; nLayer < m_layers.size(); nLayer++ ) {
             size_t index = m_wIndexedDB.back() + m_layers[nLayer - 1] * m_layers[nLayer];
 
             m_wIndexedDB.push_back(index);

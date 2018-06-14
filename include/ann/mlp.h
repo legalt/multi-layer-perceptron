@@ -16,6 +16,15 @@ namespace ann
     IActivation * getActivation( size_t type );
 
     class MLP {
+        private:
+            std::vector<size_t> m_layers;
+            std::vector<double> m_weights;
+            std::vector<size_t> m_wIndexedDB;
+            std::vector<double> m_inputs;
+            std::vector<double> m_outputs;
+            std::vector<IActivation*> m_activations;
+            size_t m_nOutputs;
+            double m_learningRate;
         public:
             MLP () = delete;
             MLP (const MLP&) = delete;
@@ -80,15 +89,5 @@ namespace ann
         
         protected:
             inline void setWeight(std::vector<double> weights) { m_weights = weights; }
-
-        private:
-            std::vector<size_t> m_layers;
-            std::vector<double> m_weights;
-            std::vector<size_t> m_wIndexedDB;
-            std::vector<double> m_inputs;
-            std::vector<double> m_outputs;
-            std::vector<IActivation*> m_activations;
-            size_t m_nOutputs;
-            double m_learningRate;
     };
 }

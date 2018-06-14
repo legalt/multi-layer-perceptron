@@ -6,6 +6,21 @@
 
 static std::shared_ptr<ann::MLP> network;
 
+void printImage ( std::vector<double> image, size_t width = 28, size_t height = 28  ) {
+    int row = 0;
+
+    for ( size_t i = 0; i < width * height; i++ ) {
+        std::cout << ((image[i]) > 0 ? '*' : ' ');
+
+        row++;
+        
+        if ( row == height ) {
+            row = 0;
+            std::cout << '\n';
+        }
+    }
+}
+
 void recognizeImage ( const v8::FunctionCallbackInfo<v8::Value> & args ) {
     v8::Isolate * isolate = args.GetIsolate();
 
@@ -33,6 +48,10 @@ void recognizeImage ( const v8::FunctionCallbackInfo<v8::Value> & args ) {
         v8::Handle<v8::Value> item = jsArray->Get(index);
         image.push_back(item->NumberValue());
     }
+
+    std::cout << "\n\n";
+    printImage(image);
+    std::cout << "\n\n";
 
     std::vector<double> outputs = network->train(image);
 
