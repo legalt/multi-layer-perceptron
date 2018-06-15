@@ -65,6 +65,8 @@ void printHelp () {
 void trainNetwork ( size_t epochs, size_t nSamples, ann::MLP & network, Samples images, std::vector<uint8_t> labels ) {
     try {
         for ( size_t iter = 0; iter < epochs; iter++ ) {
+            double res_mse = 0;
+
             for ( size_t nImage = 0; nImage < nSamples; nImage++ ) {
                 network.train(images[nImage]);
 
@@ -74,14 +76,17 @@ void trainNetwork ( size_t epochs, size_t nSamples, ann::MLP & network, Samples 
                 
                 const double mse = network.getMse(images[nImage], etalons[imgLabel]);                
                 double total = round((iter / epochs) * 100);
-                double progress = round((nImage / nSamples) * 100);
+                double progress = round(((double)nImage / (double)nSamples) * 100);
 
                 std::cout << "\r"
                             << "epoch: " << iter
                             << "\tprogress: " << progress
                             << "\t\tmse: " << ((int)(mse * 100))
                             << std::flush;
+                res_mse += mse;
             }
+
+            std::cout << "\nepoch [" << iter  << "] mse: " << (int)((res_mse / 2) * 100) << '\n';
         }
     } catch ( boost::bad_lexical_cast & ex ) {
         std::cerr << __FUNCTION__ << " [" << __LINE__ << "]: " << ex.what();
@@ -101,7 +106,7 @@ std::vector<std::vector<double>> loadDataBase ( std::vector<std::vector<uint8_t>
 
         for ( uint8_t pixel: item ) {
             double _pixel = (double)pixel;
-            image.push_back((_pixel/255));
+            image.push_back((pixel > 1 ? 1 : 0));
         }
 
         images[index] = std::move(image);
@@ -164,16 +169,16 @@ void handle_command ( const char * arg ) {
         const auto & images = loadDataBase(dataset.training_images);
 
         std::vector<ann::IActivation*> atcs = {
-            ann::getActivation(ann::RELU),
             ann::getActivation(ann::SIG),
-            // ann::getActivation(ann::SIG)
+            ann::getActivation(ann::SIG),
+            ann::getActivation(ann::SIG)
         };
-        ann::MLP mlp({784, 10}, atcs, 0.06);        
-        std::cout << "inited network\n";        
+        ann::MLP mlp({784, 800, 10}, atcs, 0.006);
+        std::cout << "inited network\n";
         
         std::cout << "training\n";
-        size_t setSize = 60000;
-        const size_t epochs = 10;
+        size_t setSize = 5000;
+        const size_t epochs = 1;
 
         trainNetwork(epochs, setSize, mlp, images, dataset.training_labels);
 
@@ -192,7 +197,15 @@ void handle_command ( const char * arg ) {
         std::cout << "Backup weight path: ";
         std::cin >> backPath;
         
-        auto mlp = ann::MLP::load(backPath);
+        auto mlpObj = ann::MLP::load(backPath);
+        std::shared_ptr<ann::MLP> mlp;
+
+        if ( !mlpObj ) {
+            return;
+        }
+
+        mlp = *mlpObj;
+
         std::string path;
         std::cout << "Folder with mnist database: ";
         std::cin >> path;
@@ -214,7 +227,7 @@ void handle_command ( const char * arg ) {
                 std::cin >> index_;
                 size_t index = boost::lexical_cast<size_t>(index_);            
                 size_t imgLabel = (size_t)(dataset.training_labels[index]);
-                recognizeImage(*mlp, images[index], etalons[imgLabel]);
+                recognizeImage((*mlp), images[index], etalons[imgLabel]);
             };
             
             retry();

@@ -5,7 +5,7 @@ let Static = require('node-static').Server,
     staticClient = new Static('./public/', {cache: false});
 
 
-mlp.init('../../mnist_weights');
+mlp.init('../../asd');
 
 
 http

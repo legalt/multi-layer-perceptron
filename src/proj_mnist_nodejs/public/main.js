@@ -118,7 +118,7 @@ function trim(c) {
         
         context.strokeStyle = "#df4b26";
         context.lineJoin = "round";
-        context.lineWidth = 20;
+        context.lineWidth = 10;
         
         for ( let index = 0; index < clickX.length; index++ ) {
             context.beginPath();
@@ -180,7 +180,7 @@ function trim(c) {
             for ( let index = 0; index < pixels.length; index += 4 ) {
                 let brightness = (pixels[index] +  pixels[index + 1] + pixels[index + 2]) / 3;
                 
-                newPixels.push(brightness / 255);
+                newPixels.push(brightness > 0 ? 1 : 0);
 
                 pixels[index] = brightness;
                 pixels[index + 1] = brightness;
@@ -189,7 +189,7 @@ function trim(c) {
 
             context.putImageData(imgData, 0, 0);
             
-            xhr.open('POST', 'http://localhost:8000', true);
+            xhr.open('POST', `http://${location.hostname}:8000`, true);
 
             xhr.onreadystatechange = function () {
                 if ( this.readyState !== 4 ) return;
