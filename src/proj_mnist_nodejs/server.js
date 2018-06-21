@@ -1,6 +1,7 @@
 let Static = require('node-static').Server,
     http  = require('http'),
     mlp = require('./build/Release/mlp.node'),
+    sharp = require('sharp'),
     
     staticClient = new Static('./public/', {cache: false});
 
@@ -30,11 +31,30 @@ http.createServer((request, response) => {
         })
         .on('end', () => {            
             body = Buffer.concat(body).toString();
-            body = body.split(',');
+            body = body.replace('data:image/png;base64,', '');
+            body = Buffer.from(body, 'base64');
 
-            let result = mlp.recognize(body);
+            sharp(body)
+                .resize(28, 28, {
+                    kernel: sharp.kernel.cubic
+                })
+                .grayscale(true)
+                .raw()
+                .toBuffer(function(err, data, info) {
+                    let pixels = [],
+                        index;
 
-            response.write(JSON.stringify(result));
-            response.end();
+                    for ( index = 0; index < data.length; index++ ) {
+                        pixels.push(data[index] / 255);
+                    }
+
+                    let result = mlp.recognize(pixels);
+
+                    response.write(JSON.stringify(result));
+                    response.end();
+                });
+            // console.log(body)
+            
+            
         });
 }).listen(8000);

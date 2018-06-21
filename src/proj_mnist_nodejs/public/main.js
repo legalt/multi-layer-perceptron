@@ -118,7 +118,7 @@ function trim(c) {
         
         context.strokeStyle = "#df4b26";
         context.lineJoin = "round";
-        context.lineWidth = 10;
+        context.lineWidth = 15;
         
         for ( let index = 0; index < clickX.length; index++ ) {
             context.beginPath();
@@ -164,51 +164,28 @@ function trim(c) {
 
 
     window.recognize.addEventListener('click', function () {
-        let img = new Image(28, 28),
-            $trimCanvas = trim($canvas),
-            trimContext = $trimCanvas.getContext("2d");
+        let xhr = new XMLHttpRequest();            
         
-        img.onload = function () {            
-            trimContext.clearRect(0, 0, 250, 250);
-            trimContext.drawImage(img, 0, 0, 250, 250, 0, 0, 48, 48);
+        xhr.open('POST', `http://${location.hostname}:8000`, true);
+
+        xhr.onreadystatechange = function () {
+            if ( this.readyState !== 4 ) return;
+
+            let result = JSON.parse(this.responseText),
+                item = Math.max.apply(null, result),
+                index = result.indexOf(item);
             
-            let imgData = trimContext.getImageData(0, 0, 28, 28),
-                pixels = imgData.data,
-                xhr = new XMLHttpRequest(),
-                newPixels = [];
+            window.res.value = index === -1 ? "Not recognized" : index;
             
-            for ( let index = 0; index < pixels.length; index += 4 ) {
-                let brightness = (pixels[index] +  pixels[index + 1] + pixels[index + 2]) / 3;
-                
-                newPixels.push(brightness > 0 ? 1 : 0);
+            showChart(result);
+        };
 
-                pixels[index] = brightness;
-                pixels[index + 1] = brightness;
-                pixels[index + 2] = brightness;
-            }
-
-            context.putImageData(imgData, 0, 0);
-            
-            xhr.open('POST', `http://${location.hostname}:8000`, true);
-
-            xhr.onreadystatechange = function () {
-                if ( this.readyState !== 4 ) return;
-
-                let result = JSON.parse(this.responseText),
-                    item = Math.max.apply(null, result),
-                    index = result.indexOf(item);
-                
-                window.res.value = index === -1 ? "Not recognized" : index;
-                
-                showChart(result);
-            };
-
-            xhr.send(newPixels);
-        }
-
-        img.src = $trimCanvas.toDataURL();
+        xhr.send($canvas.toDataURL());
+        
         clickX = [];
         clickY = [];
         clickDrag = [];
+
+        redraw();
     });
 })();

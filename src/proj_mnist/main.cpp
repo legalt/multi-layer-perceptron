@@ -82,11 +82,12 @@ void trainNetwork ( size_t epochs, size_t nSamples, ann::MLP & network, Samples 
                             << "epoch: " << iter
                             << "\tprogress: " << progress
                             << "\t\tmse: " << ((int)(mse * 100))
-                            << std::flush;
+							<< "\t\timages[" << nImage << " : " << nSamples << "]"
+							<< std::flush;
                 res_mse += mse;
             }
 
-            std::cout << "\nepoch [" << iter  << "] mse: " << (int)((res_mse / 2) * 100) << '\n';
+            std::cout << "\nepoch [" << iter  << "] mse: " << (int)((res_mse / nSamples) * 100) << '\n';
         }
     } catch ( boost::bad_lexical_cast & ex ) {
         std::cerr << __FUNCTION__ << " [" << __LINE__ << "]: " << ex.what();
@@ -106,7 +107,7 @@ std::vector<std::vector<double>> loadDataBase ( std::vector<std::vector<uint8_t>
 
         for ( uint8_t pixel: item ) {
             double _pixel = (double)pixel;
-            image.push_back((pixel > 1 ? 1 : 0));
+            image.push_back(_pixel / 255);
         }
 
         images[index] = std::move(image);
@@ -173,12 +174,12 @@ void handle_command ( const char * arg ) {
             ann::getActivation(ann::SIG),
             ann::getActivation(ann::SIG)
         };
-        ann::MLP mlp({784, 800, 10}, atcs, 0.006);
+        ann::MLP mlp({784, 800, 10}, atcs, 0.06);
         std::cout << "inited network\n";
         
         std::cout << "training\n";
-        size_t setSize = 5000;
-        const size_t epochs = 1;
+        size_t setSize = 60000;
+        const size_t epochs = 5;
 
         trainNetwork(epochs, setSize, mlp, images, dataset.training_labels);
 
